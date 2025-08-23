@@ -24,8 +24,14 @@
 }
 
 /* Remove fixed tldraw background colors to allow transparency */
-.tl-background {
+.tl-background,
+.tldraw__editor,
+.tl-canvas,
+.tl-svg-container,
+body,
+html {
 	background-color: transparent !important;
+	background: transparent !important;
 }
 
 /* Integrated toolbar controls - match tldraw native styling */

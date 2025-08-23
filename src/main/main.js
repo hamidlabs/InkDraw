@@ -21,6 +21,8 @@ const createWindow = () => {
     movable: false,
     alwaysOnTop: true,
     skipTaskbar: false,
+    transparent: true,
+    backgroundColor: '#00000000',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

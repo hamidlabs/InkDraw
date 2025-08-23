@@ -67,6 +67,35 @@ const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimiz
   );
 };
 
+// Custom Background component for transparent support
+const CustomBackground = ({ background }: { background: string }) => {
+  if (background === 'transparent') {
+    return (
+      <div 
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'transparent',
+          pointerEvents: 'none',
+          zIndex: -1
+        }}
+      />
+    );
+  }
+  return (
+    <div 
+      style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundColor: background === 'white' ? '#ffffff' : 
+                        background === 'light' ? '#f8f9fa' : 
+                        background === 'dark' ? '#2c3e50' : 'transparent',
+        zIndex: -1
+      }}
+    />
+  );
+};
+
 // Custom StylePanel that only shows when we want it to
 const ControlledStylePanel = ({ position, ...props }: any) => {
   return (
@@ -104,6 +133,7 @@ const App: React.FC = () => {
     StylePanel: showStylePanel ? (props: any) => (
       <ControlledStylePanel {...props} position={stylePanelPosition} />
     ) : null,
+    Background: () => <CustomBackground background={background} />,
     ContextMenu: null, // Hide context menu to prevent default right-click behavior
     // Hide specific UI elements as requested
     NavigationPanel: null, // Hides page zoom button  
@@ -222,23 +252,13 @@ const App: React.FC = () => {
   }, [showStylePanel]);
 
   const getContainerStyle = () => {
-    const baseStyle = {
+    return {
       width: '100vw',
       height: '100vh',
       position: 'relative' as const,
-      overflow: 'hidden' as const
+      overflow: 'hidden' as const,
+      backgroundColor: 'transparent' // Always transparent - background handled by tldraw Background component
     };
-
-    switch (background) {
-      case 'white':
-        return { ...baseStyle, backgroundColor: '#ffffff' };
-      case 'light':
-        return { ...baseStyle, backgroundColor: '#f8f9fa' };
-      case 'dark':
-        return { ...baseStyle, backgroundColor: '#2c3e50' };
-      default:
-        return { ...baseStyle, backgroundColor: 'transparent' };
-    }
   };
 
   const getCanvasStyle = () => {
