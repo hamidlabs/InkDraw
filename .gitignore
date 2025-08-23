@@ -6,6 +6,7 @@ yarn-error.log*
 
 # Production builds
 dist/
+release/
 dist-electron/
 build/
 *.tsbuildinfo

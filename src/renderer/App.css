@@ -41,6 +41,18 @@ html {
 	margin-left: 8px;
 }
 
+.tlui-toolbar {
+	position: fixed !important;
+	top: 0 !important;
+	left: 50% !important;
+	transform: translateX(-50%) !important;
+	border-radius: 0 0 10px 10px !important;
+}
+
+.tlui-toolbar__extras {
+	display: none !important;
+}
+
 .toolbar-select {
 	background: var(--color-panel);
 	border: 1px solid var(--color-border);
@@ -87,7 +99,6 @@ html {
 	background: var(--color-muted-2);
 }
 
-
 /* Hide specific tldraw UI elements using CSS classes */
 .tlui-navigation-panel {
 	display: none !important;
@@ -97,11 +108,9 @@ html {
 	display: none !important;
 }
 
-
 /* Controlled style panel positioning */
 .controlled-style-panel {
 	position: absolute;
 	z-index: 1000;
 	pointer-events: auto;
 }
-
