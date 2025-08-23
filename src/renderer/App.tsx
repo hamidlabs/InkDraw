@@ -28,13 +28,44 @@ interface Screen {
   isPrimary: boolean;
 }
 
-// Custom Toolbar component positioned at the top
-const CustomTopToolbar = (props: any) => {
+// Combined Toolbar with drawing tools + screen selector + minimize
+const CombinedToolbar = (props: any) => {
+  const { screens, currentScreenId, onScreenSwitch, onMinimize } = props;
+  
   return (
-    <div className="custom-top-toolbar">
-      <DefaultToolbar {...props}>
-        <DefaultToolbarContent />
-      </DefaultToolbar>
+    <div className="combined-toolbar">
+      {/* App controls on the left */}
+      <div className="app-controls">
+        <div className="app-title">InkDraw</div>
+        
+        {screens && screens.length > 1 && (
+          <div className="screen-selector">
+            <label>Monitor:</label>
+            <select
+              value={currentScreenId || ''}
+              onChange={(e) => onScreenSwitch(Number(e.target.value))}
+            >
+              {screens.map((screen: any) => (
+                <option key={screen.id} value={screen.id}>
+                  {screen.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        
+        <button className="minimize-btn" onClick={onMinimize}>
+          <span>−</span>
+          Minimize
+        </button>
+      </div>
+
+      {/* tldraw drawing tools in the center */}
+      <div className="drawing-tools">
+        <DefaultToolbar>
+          <DefaultToolbarContent />
+        </DefaultToolbar>
+      </div>
     </div>
   );
 };
@@ -61,9 +92,17 @@ const App: React.FC = () => {
   const [stylePanelPosition, setStylePanelPosition] = useState({ x: 0, y: 0 });
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
-  // Components configuration - only show toolbar, hide everything else initially
+  // Components configuration - use combined toolbar
   const components: TLUiComponents = {
-    Toolbar: CustomTopToolbar,
+    Toolbar: (props: any) => (
+      <CombinedToolbar 
+        {...props}
+        screens={screens}
+        currentScreenId={currentScreenId}
+        onScreenSwitch={handleScreenSwitch}
+        onMinimize={handleMinimize}
+      />
+    ),
     StylePanel: showStylePanel ? (props: any) => (
       <ControlledStylePanel {...props} position={stylePanelPosition} />
     ) : null,
@@ -175,35 +214,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* Simple toolbar for monitor switching and minimize */}
-      <div className="simple-toolbar">
-        <div className="toolbar-content">
-          <div className="app-title">InkDraw</div>
-          
-          {screens.length > 1 && (
-            <div className="screen-selector">
-              <label>Monitor:</label>
-              <select
-                value={currentScreenId || ''}
-                onChange={(e) => handleScreenSwitch(Number(e.target.value))}
-              >
-                {screens.map((screen) => (
-                  <option key={screen.id} value={screen.id}>
-                    {screen.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          
-          <button className="minimize-btn" onClick={handleMinimize}>
-            <span>−</span>
-            Minimize
-          </button>
-        </div>
-      </div>
-      
-      {/* tldraw with native UI and custom toolbar positioning */}
+      {/* tldraw with combined toolbar */}
       <div 
         ref={canvasContainerRef}
         className="canvas-container"
