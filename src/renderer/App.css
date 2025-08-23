@@ -3,7 +3,6 @@
 	height: 100vh;
 	display: flex;
 	flex-direction: column;
-	background-color: #1e1e1e;
 	overflow: hidden;
 }
 
@@ -24,13 +23,9 @@
 	box-sizing: border-box;
 }
 
+/* Remove fixed tldraw background colors to allow transparency */
 .tl-background {
-	background-color: #ffffff !important;
-}
-
-.tldraw {
-	--color-background: #ffffff;
-	--color-muted-1: #fcfcfc;
+	background-color: transparent !important;
 }
 
 /* Integrated toolbar controls - match tldraw native styling */

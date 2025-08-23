@@ -87,6 +87,7 @@ const App: React.FC = () => {
   const [currentScreenId, setCurrentScreenId] = useState<number | null>(null);
   const [showStylePanel, setShowStylePanel] = useState(false);
   const [stylePanelPosition, setStylePanelPosition] = useState({ x: 0, y: 0 });
+  const [background, setBackground] = useState('transparent');
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Components configuration with integrated toolbar
@@ -168,6 +169,13 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const toggleBackground = useCallback(() => {
+    const backgrounds = ['transparent', 'white', 'light', 'dark'];
+    const currentIndex = backgrounds.indexOf(background);
+    const nextIndex = (currentIndex + 1) % backgrounds.length;
+    setBackground(backgrounds[nextIndex]);
+  }, [background]);
+
   // Handle right-click on canvas to show style panel
   const handleCanvasRightClick = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
@@ -183,6 +191,22 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ctrl+B for background toggle
+      if (event.ctrlKey && event.key.toLowerCase() === 'b') {
+        event.preventDefault();
+        toggleBackground();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [toggleBackground]);
+
   // Handle click outside to hide style panel
   useEffect(() => {
     const handleClickOutside = () => {
@@ -197,13 +221,44 @@ const App: React.FC = () => {
     }
   }, [showStylePanel]);
 
+  const getContainerStyle = () => {
+    const baseStyle = {
+      width: '100vw',
+      height: '100vh',
+      position: 'relative' as const,
+      overflow: 'hidden' as const
+    };
+
+    switch (background) {
+      case 'white':
+        return { ...baseStyle, backgroundColor: '#ffffff' };
+      case 'light':
+        return { ...baseStyle, backgroundColor: '#f8f9fa' };
+      case 'dark':
+        return { ...baseStyle, backgroundColor: '#2c3e50' };
+      default:
+        return { ...baseStyle, backgroundColor: 'transparent' };
+    }
+  };
+
+  const getCanvasStyle = () => {
+    // Make tldraw canvas background transparent so our background shows through
+    return {
+      '--tl-canvas-background': 'transparent'
+    };
+  };
+
+  const getThemeClass = () => {
+    return background === 'dark' ? 'tl-theme__dark' : 'tl-theme__light';
+  };
+
   return (
-    <div className="app-container">
-      {/* tldraw with integrated toolbar */}
+    <div style={getContainerStyle()}>
       <div 
         ref={canvasContainerRef}
-        className="canvas-container"
+        className={`canvas-container ${getThemeClass()}`}
         onContextMenu={handleCanvasRightClick}
+        style={{ width: '100%', height: '100%', ...getCanvasStyle() }}
       >
         <Tldraw
           persistenceKey="inkdraw-canvas"
