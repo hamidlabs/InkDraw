@@ -1,130 +1,138 @@
 .app-container {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #1e1e1e;
-  overflow: hidden;
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background-color: #1e1e1e;
+	overflow: hidden;
 }
 
 .canvas-container {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-  /* Ensure toolbar can be seen above canvas */
-  overflow: visible;
+	width: 100vw;
+	height: 100vh;
+	position: relative;
+	/* Ensure toolbar can be seen above canvas */
+	overflow: visible;
 }
 
 .canvas-container .tldraw__editor {
-  width: 100%;
-  height: 100%;
+	width: 100%;
+	height: 100%;
 }
 
 .tldraw__editor * {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 .tl-background {
-  background-color: #ffffff !important;
+	background-color: #ffffff !important;
 }
 
 .tldraw {
-  --color-background: #ffffff;
-  --color-muted-1: #fcfcfc;
+	--color-background: #ffffff;
+	--color-muted-1: #fcfcfc;
 }
 
-/* Combined toolbar with app controls and drawing tools */
-.combined-toolbar {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  pointer-events: auto;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  backdrop-filter: blur(10px);
+/* Compact app dock - fit content in top-right */
+.app-dock {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	display: flex;
+	align-items: center;
+	padding: 8px 16px;
+	border-radius: 12px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+	z-index: 1000;
+	-webkit-app-region: drag;
+	gap: 12px;
+	backdrop-filter: blur(10px);
+	width: fit-content;
 }
 
-.app-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* tldraw toolbar wrapper - positioned at top-center */
+.top-toolbar-wrapper {
+	position: absolute;
+	top: 60px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1000;
+	pointer-events: auto;
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 8px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	padding: 4px;
+	backdrop-filter: blur(10px);
+	width: fit-content;
 }
-
-.drawing-tools {
-  display: flex;
-  align-items: center;
-}
-
 
 /* Controlled style panel positioning */
 .controlled-style-panel {
-  position: absolute;
-  z-index: 1000;
-  pointer-events: auto;
+	position: absolute;
+	z-index: 1000;
+	pointer-events: auto;
 }
 
 .screen-selector {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	-webkit-app-region: no-drag;
 }
 
 .screen-selector label {
-  color: #333;
-  font-weight: 500;
-  font-size: 13px;
+	color: white;
+	font-weight: 500;
+	font-size: 14px;
 }
 
 .screen-selector select {
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background-color: white;
-  color: #333;
-  font-size: 13px;
-  cursor: pointer;
-  outline: none;
+	padding: 6px 10px;
+	border: none;
+	border-radius: 6px;
+	background-color: rgba(255, 255, 255, 0.2);
+	color: white;
+	font-size: 14px;
+	cursor: pointer;
+	outline: none;
+	backdrop-filter: blur(10px);
 }
 
 .screen-selector select option {
-  background-color: white;
-  color: #333;
+	background-color: #333;
+	color: white;
 }
 
 .minimize-btn {
-  padding: 6px 12px;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #333;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+	padding: 8px 16px;
+	background-color: rgba(255, 255, 255, 0.2);
+	border: none;
+	border-radius: 6px;
+	color: white;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	backdrop-filter: blur(10px);
+	-webkit-app-region: no-drag;
 }
 
 .minimize-btn:hover {
-  background-color: #e5e5e5;
-  transform: translateY(-1px);
+	background-color: rgba(255, 255, 255, 0.3);
+	transform: translateY(-1px);
 }
 
 .minimize-btn:active {
-  transform: translateY(0);
+	transform: translateY(0);
 }
 
 .app-title {
-  color: #333;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+	color: white;
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: 0.5px;
 }
