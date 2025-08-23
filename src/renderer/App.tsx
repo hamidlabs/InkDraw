@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Tldraw, TLUiComponents, DefaultToolbar, DefaultToolbarContent, DefaultStylePanel } from 'tldraw';
+import { Tldraw, TLUiComponents, DefaultToolbar, DefaultToolbarContent, DefaultStylePanel, useTools } from 'tldraw';
 import 'tldraw/tldraw.css';
 import './App.css';
 
@@ -28,8 +28,10 @@ interface Screen {
   isPrimary: boolean;
 }
 
-// Properly positioned toolbar 
+// Properly positioned toolbar following tldraw documentation
 const TopToolbar = (props: any) => {
+  useTools(); // Required for DefaultToolbar to work properly
+  
   return (
     <div className="top-toolbar-wrapper">
       <DefaultToolbar {...props}>
@@ -61,14 +63,20 @@ const App: React.FC = () => {
   const [stylePanelPosition, setStylePanelPosition] = useState({ x: 0, y: 0 });
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
-  // Components configuration - simple toolbar positioning
+  // Components configuration following tldraw documentation
   const components: TLUiComponents = {
     Toolbar: TopToolbar,
     StylePanel: showStylePanel ? (props: any) => (
       <ControlledStylePanel {...props} position={stylePanelPosition} />
     ) : null,
+    // Hide UI elements as mentioned by user
+    NavigationPanel: null, // Hides page zoom button
     // Hide context menu to prevent default right-click behavior
     ContextMenu: null,
+    // Hide main menu and other top-left elements
+    MainMenu: null,
+    HelpMenu: null,
+    ActionsMenu: null,
   };
 
 
