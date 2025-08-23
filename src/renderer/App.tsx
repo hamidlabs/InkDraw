@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Tldraw, TLUiComponents, DefaultStylePanel } from 'tldraw';
+import { Tldraw, TLUiComponents, DefaultStylePanel, DefaultToolbar, DefaultToolbarContent } from 'tldraw';
 import 'tldraw/tldraw.css';
 import './App.css';
 
@@ -29,6 +29,44 @@ interface Screen {
 }
 
 
+// Integrated toolbar with tldraw native controls + monitor selection + minimize
+const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimize, ...props }: any) => {
+  return (
+    <DefaultToolbar {...props}>
+      <DefaultToolbarContent />
+      
+      {/* Add divider */}
+      <div className="tlui-toolbar__divider" />
+      
+      {/* Monitor selection control */}
+      {screens && screens.length > 1 && (
+        <div className="toolbar-monitor-selector">
+          <select
+            value={currentScreenId || ''}
+            onChange={(e) => onScreenSwitch(Number(e.target.value))}
+            className="toolbar-select"
+          >
+            {screens.map((screen: any) => (
+              <option key={screen.id} value={screen.id}>
+                Monitor {screen.id}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      
+      {/* Minimize button */}
+      <button 
+        className="toolbar-minimize-btn"
+        onClick={onMinimize}
+        title="Minimize"
+      >
+        <span>−</span>
+      </button>
+    </DefaultToolbar>
+  );
+};
+
 // Custom StylePanel that only shows when we want it to
 const ControlledStylePanel = ({ position, ...props }: any) => {
   return (
@@ -51,8 +89,17 @@ const App: React.FC = () => {
   const [stylePanelPosition, setStylePanelPosition] = useState({ x: 0, y: 0 });
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
-  // Minimal components configuration - only override what we need
+  // Components configuration with integrated toolbar
   const components: TLUiComponents = {
+    Toolbar: (props: any) => (
+      <IntegratedToolbar 
+        {...props}
+        screens={screens}
+        currentScreenId={currentScreenId}
+        onScreenSwitch={handleScreenSwitch}
+        onMinimize={handleMinimize}
+      />
+    ),
     StylePanel: showStylePanel ? (props: any) => (
       <ControlledStylePanel {...props} position={stylePanelPosition} />
     ) : null,
@@ -152,33 +199,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* Compact app controls dock */}
-      <div className="app-dock">
-        <div className="app-title">InkDraw</div>
-        
-        {screens.length > 1 && (
-          <div className="screen-selector">
-            <label>Monitor:</label>
-            <select
-              value={currentScreenId || ''}
-              onChange={(e) => handleScreenSwitch(Number(e.target.value))}
-            >
-              {screens.map((screen) => (
-                <option key={screen.id} value={screen.id}>
-                  {screen.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        
-        <button className="minimize-btn" onClick={handleMinimize}>
-          <span>−</span>
-          Minimize
-        </button>
-      </div>
-
-      {/* tldraw with toolbar positioned at top */}
+      {/* tldraw with integrated toolbar */}
       <div 
         ref={canvasContainerRef}
         className="canvas-container"
