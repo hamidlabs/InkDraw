@@ -51,23 +51,6 @@
 	width: fit-content;
 }
 
-/* tldraw toolbar wrapper - positioned at top-center */
-.top-toolbar-wrapper {
-	position: absolute;
-	top: 60px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 1000 !important;
-	pointer-events: auto;
-	background: rgba(255, 255, 255, 0.95);
-	border-radius: 8px;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-	padding: 4px;
-	backdrop-filter: blur(10px);
-	width: fit-content;
-	display: flex !important;
-	visibility: visible !important;
-}
 
 /* Hide specific tldraw UI elements using CSS classes */
 .tlui-navigation-panel {
@@ -78,11 +61,6 @@
 	display: none !important;
 }
 
-/* Ensure toolbar content is visible */
-.tlui-toolbar {
-	display: flex !important;
-	visibility: visible !important;
-}
 
 /* Controlled style panel positioning */
 .controlled-style-panel {

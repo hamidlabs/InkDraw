@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Tldraw, TLUiComponents, DefaultToolbar, DefaultToolbarContent, DefaultStylePanel, useTools } from 'tldraw';
+import { Tldraw, TLUiComponents, DefaultStylePanel } from 'tldraw';
 import 'tldraw/tldraw.css';
 import './App.css';
 
@@ -28,18 +28,6 @@ interface Screen {
   isPrimary: boolean;
 }
 
-// Properly positioned toolbar following tldraw documentation
-const TopToolbar = (props: any) => {
-  useTools(); // Required for DefaultToolbar to work properly
-  
-  return (
-    <div className="top-toolbar-wrapper">
-      <DefaultToolbar {...props}>
-        <DefaultToolbarContent />
-      </DefaultToolbar>
-    </div>
-  );
-};
 
 // Custom StylePanel that only shows when we want it to
 const ControlledStylePanel = ({ position, ...props }: any) => {
@@ -63,17 +51,14 @@ const App: React.FC = () => {
   const [stylePanelPosition, setStylePanelPosition] = useState({ x: 0, y: 0 });
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
-  // Components configuration following tldraw documentation
+  // Minimal components configuration - only override what we need
   const components: TLUiComponents = {
-    Toolbar: TopToolbar,
     StylePanel: showStylePanel ? (props: any) => (
       <ControlledStylePanel {...props} position={stylePanelPosition} />
     ) : null,
-    // Hide UI elements as mentioned by user
-    NavigationPanel: null, // Hides page zoom button
-    // Hide context menu to prevent default right-click behavior
-    ContextMenu: null,
-    // Hide main menu and other top-left elements
+    ContextMenu: null, // Hide context menu to prevent default right-click behavior
+    // Hide specific UI elements as requested
+    NavigationPanel: null, // Hides page zoom button  
     MainMenu: null,
     HelpMenu: null,
     ActionsMenu: null,
