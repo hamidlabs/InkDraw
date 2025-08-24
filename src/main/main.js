@@ -425,6 +425,12 @@ ipcMain.handle('show-from-tray', () => {
   return true;
 });
 
+ipcMain.handle('quit-app', () => {
+  isQuitting = true;
+  app.quit();
+  return true;
+});
+
 app.on('before-quit', (event) => {
   console.log('App before-quit event triggered');
   isQuitting = true;

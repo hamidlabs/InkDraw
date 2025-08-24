@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   showFromTray: () => ipcRenderer.invoke('show-from-tray'),
 
+  // Quit application
+  quitApp: () => ipcRenderer.invoke('quit-app'),
+
   // Shortcuts configuration
   getShortcutsConfig: () => ipcRenderer.invoke('get-shortcuts-config'),
   

@@ -149,6 +149,7 @@ declare global {
       getWindowInfo: () => Promise<any>;
       hideToTray: () => Promise<boolean>;
       showFromTray: () => Promise<boolean>;
+      quitApp: () => Promise<boolean>;
       getShortcutsConfig: () => Promise<any>;
       updateShortcutsConfig: (config: any) => Promise<any>;
       onWindowBlur: (callback: () => void) => () => void;
@@ -363,8 +364,12 @@ const App: React.FC = () => {
     setShortcutsConfig(newConfig);
   }, []);
 
-  const handleClose = useCallback(() => {
-    window.close();
+  const handleClose = useCallback(async () => {
+    try {
+      await window.electronAPI.quitApp();
+    } catch (error) {
+      console.error('Failed to quit app:', error);
+    }
   }, []);
 
   const toggleBackground = useCallback(() => {
