@@ -46,6 +46,9 @@ html {
 	top: 0 !important;
 	left: 50% !important;
 	transform: translateX(-50%) !important;
+}
+
+.tlui-toolbar__tools {
 	border-radius: 0 0 10px 10px !important;
 }
 
