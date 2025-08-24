@@ -176,24 +176,24 @@ const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimiz
     <DefaultToolbar {...props}>
       <DefaultToolbarContent />
       
-      {/* Add divider */}
-      <div className="tlui-toolbar__divider" />
-      
-      {/* Monitor selection control */}
+      {/* Monitor selection control with conditional divider */}
       {screens && screens.length > 1 && (
-        <div className="toolbar-monitor-selector">
-          <select
-            value={currentScreenId || ''}
-            onChange={(e) => onScreenSwitch(Number(e.target.value))}
-            className="toolbar-select"
-          >
-            {screens.map((screen: any) => (
-              <option key={screen.id} value={screen.id}>
-                Monitor {screen.id}
-              </option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div className="tlui-toolbar__divider" />
+          <div className="toolbar-monitor-selector">
+            <select
+              value={currentScreenId || ''}
+              onChange={(e) => onScreenSwitch(Number(e.target.value))}
+              className="toolbar-select"
+            >
+              {screens.map((screen: any) => (
+                <option key={screen.id} value={screen.id}>
+                  Monitor {screen.id}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
       
       {/* Settings button */}
