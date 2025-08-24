@@ -3,6 +3,142 @@ import { Tldraw, TLUiComponents, DefaultStylePanel, DefaultToolbar, DefaultToolb
 import 'tldraw/tldraw.css';
 import './App.css';
 
+interface ShortcutsConfig {
+  hideToTray: string;
+  showFromTray: string;
+}
+
+// Shortcut Configuration Modal Component
+const ShortcutConfigModal = ({ isOpen, onClose, onSave }: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (config: ShortcutsConfig) => void;
+}) => {
+  const [config, setConfig] = useState<ShortcutsConfig>({ hideToTray: '', showFromTray: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCurrentConfig();
+    }
+  }, [isOpen]);
+
+  const loadCurrentConfig = async () => {
+    try {
+      const currentConfig = await window.electronAPI.getShortcutsConfig();
+      setConfig(currentConfig);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load current shortcuts configuration');
+      console.error('Error loading shortcuts config:', err);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const result = await window.electronAPI.updateShortcutsConfig(config);
+      if (result.success) {
+        onSave(result.config);
+        onClose();
+      } else {
+        setError(result.error || 'Failed to save shortcuts configuration');
+      }
+    } catch (err) {
+      setError('Failed to save shortcuts configuration');
+      console.error('Error saving shortcuts config:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof ShortcutsConfig, value: string) => {
+    setConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const validateShortcut = (shortcut: string): boolean => {
+    // Basic validation for shortcut format
+    const validModifiers = ['Ctrl', 'Command', 'CommandOrControl', 'Alt', 'Shift', 'Meta'];
+    const parts = shortcut.split('+');
+    return parts.length >= 2 && parts.some(part => validModifiers.includes(part));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="shortcut-modal-overlay">
+      <div className="shortcut-modal">
+        <div className="shortcut-modal-header">
+          <h2>Configure Shortcuts</h2>
+          <button className="shortcut-modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <div className="shortcut-modal-content">
+          {error && <div className="shortcut-error">{error}</div>}
+          
+          <div className="shortcut-field">
+            <label htmlFor="hideToTray">Hide to System Tray:</label>
+            <input
+              id="hideToTray"
+              type="text"
+              value={config.hideToTray}
+              onChange={(e) => handleInputChange('hideToTray', e.target.value)}
+              placeholder="e.g., CommandOrControl+Shift+H"
+              className={!validateShortcut(config.hideToTray) && config.hideToTray ? 'invalid' : ''}
+            />
+            <small>Use CommandOrControl for cross-platform compatibility</small>
+          </div>
+
+          <div className="shortcut-field">
+            <label htmlFor="showFromTray">Show from System Tray:</label>
+            <input
+              id="showFromTray"
+              type="text"
+              value={config.showFromTray}
+              onChange={(e) => handleInputChange('showFromTray', e.target.value)}
+              placeholder="e.g., CommandOrControl+Shift+S"
+              className={!validateShortcut(config.showFromTray) && config.showFromTray ? 'invalid' : ''}
+            />
+            <small>Use CommandOrControl for cross-platform compatibility</small>
+          </div>
+
+          <div className="shortcut-help">
+            <h4>Available Modifiers:</h4>
+            <ul>
+              <li><strong>CommandOrControl</strong> - Ctrl on Windows/Linux, Cmd on macOS</li>
+              <li><strong>Ctrl</strong> - Control key</li>
+              <li><strong>Shift</strong> - Shift key</li>
+              <li><strong>Alt</strong> - Alt key (Option on macOS)</li>
+              <li><strong>Meta</strong> - Windows key / Cmd key</li>
+            </ul>
+            <p>Combine with regular keys like: <code>CommandOrControl+Shift+H</code></p>
+          </div>
+        </div>
+
+        <div className="shortcut-modal-actions">
+          <button 
+            className="shortcut-btn-cancel" 
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          <button 
+            className="shortcut-btn-save" 
+            onClick={handleSave}
+            disabled={isLoading || !config.hideToTray || !config.showFromTray}
+          >
+            {isLoading ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 declare global {
   interface Window {
     electronAPI: {
@@ -33,8 +169,8 @@ interface Screen {
 }
 
 
-// Integrated toolbar with tldraw native controls + monitor selection + minimize + system tray
-const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimize, onHideToTray, ...props }: any) => {
+// Integrated toolbar with tldraw native controls + monitor selection + minimize + system tray + settings + close
+const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimize, onHideToTray, onOpenSettings, onClose, ...props }: any) => {
   return (
     <DefaultToolbar {...props}>
       <DefaultToolbarContent />
@@ -59,6 +195,15 @@ const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimiz
         </div>
       )}
       
+      {/* Settings button */}
+      <button 
+        className="toolbar-settings-btn"
+        onClick={onOpenSettings}
+        title="Settings"
+      >
+        <span>⚙</span>
+      </button>
+      
       {/* Hide to tray button */}
       <button 
         className="toolbar-hide-tray-btn"
@@ -75,6 +220,15 @@ const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimiz
         title="Minimize"
       >
         <span>−</span>
+      </button>
+      
+      {/* Close button */}
+      <button 
+        className="toolbar-close-btn"
+        onClick={onClose}
+        title="Close"
+      >
+        <span>×</span>
       </button>
     </DefaultToolbar>
   );
@@ -102,6 +256,8 @@ const App: React.FC = () => {
   const [showStylePanel, setShowStylePanel] = useState(false);
   const [stylePanelPosition, setStylePanelPosition] = useState({ x: 0, y: 0 });
   const [background, setBackground] = useState('transparent');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [shortcutsConfig, setShortcutsConfig] = useState<ShortcutsConfig>({ hideToTray: '', showFromTray: '' });
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Components configuration with integrated toolbar
@@ -114,6 +270,8 @@ const App: React.FC = () => {
         onScreenSwitch={handleScreenSwitch}
         onMinimize={handleMinimize}
         onHideToTray={handleHideToTray}
+        onOpenSettings={() => setShowSettingsModal(true)}
+        onClose={handleClose}
       />
     ),
     StylePanel: showStylePanel ? (props: any) => (
@@ -192,8 +350,16 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const handleShortcutsSave = useCallback((newConfig: ShortcutsConfig) => {
+    setShortcutsConfig(newConfig);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    window.close();
+  }, []);
+
   const toggleBackground = useCallback(() => {
-    const backgrounds = ['transparent', 'white', 'light', 'dark'];
+    const backgrounds = ['transparent', 'white', 'dark', 'teal'];
     const currentIndex = backgrounds.indexOf(background);
     const nextIndex = (currentIndex + 1) % backgrounds.length;
     setBackground(backgrounds[nextIndex]);
@@ -245,12 +411,31 @@ const App: React.FC = () => {
   }, [showStylePanel]);
 
   const getContainerStyle = () => {
+    let backgroundColor = 'transparent';
+    
+    switch (background) {
+      case 'transparent':
+        backgroundColor = 'transparent';
+        break;
+      case 'white':
+        backgroundColor = '#ffffff';
+        break;
+      case 'dark':
+        backgroundColor = '#2d3748'; // Darkish gray
+        break;
+      case 'teal':
+        backgroundColor = '#134e4a'; // Dark teal
+        break;
+      default:
+        backgroundColor = 'transparent';
+    }
+    
     return {
       width: '100vw',
       height: '100vh',
       position: 'relative' as const,
       overflow: 'hidden' as const,
-      backgroundColor: 'transparent' // Always transparent - background handled by tldraw Background component
+      backgroundColor
     };
   };
 
@@ -262,7 +447,9 @@ const App: React.FC = () => {
   };
 
   const getThemeClass = () => {
-    return background === 'dark' ? 'tl-theme__dark' : 'tl-theme__light';
+    // Use dark theme for dark backgrounds, light theme for light backgrounds
+    const darkBackgrounds = ['dark', 'teal'];
+    return darkBackgrounds.includes(background) ? 'tl-theme__dark' : 'tl-theme__light';
   };
 
   return (
@@ -278,6 +465,13 @@ const App: React.FC = () => {
           components={components}
         />
       </div>
+      
+      {/* Shortcut Configuration Modal */}
+      <ShortcutConfigModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        onSave={handleShortcutsSave}
+      />
     </div>
   );
 };

@@ -8,6 +8,23 @@ let isAlwaysOnTop = true;
 let tray = null;
 let isQuitting = false;
 
+// Ensure single instance
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  console.log('Another instance is running, quitting...');
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window instead
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      if (!mainWindow.isVisible()) mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 // Default shortcuts configuration
 const DEFAULT_SHORTCUTS = {
   hideToTray: 'CommandOrControl+Shift+H',
@@ -45,19 +62,46 @@ let shortcutsConfig = loadShortcutsConfig();
 
 // Create system tray
 const createTray = () => {
-  // Create a simple icon for the tray (16x16 transparent PNG with a small dot)
-  const iconData = Buffer.from([
-    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
-    0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0xF3, 0xFF,
-    0x61, 0x00, 0x00, 0x00, 0x4A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x64, 0x60, 0x60, 0x60,
-    0x64, 0x00, 0x01, 0x46, 0x06, 0x06, 0x06, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18,
-    0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86,
-    0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61,
-    0x18, 0x86, 0x61, 0x18, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42,
-    0x60, 0x82
-  ]);
+  // Use the custom icon from build/icon.png
+  const iconPath = path.join(__dirname, '../../build/icon.png');
+  let trayIcon;
   
-  const trayIcon = nativeImage.createFromBuffer(iconData);
+  try {
+    // Load the custom icon and resize it for system tray
+    trayIcon = nativeImage.createFromPath(iconPath);
+    if (trayIcon.isEmpty()) {
+      console.warn('Custom icon not found, using default');
+      // Fallback to simple icon if custom icon fails
+      const iconData = Buffer.from([
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+        0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0xF3, 0xFF,
+        0x61, 0x00, 0x00, 0x00, 0x4A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x64, 0x60, 0x60, 0x60,
+        0x64, 0x00, 0x01, 0x46, 0x06, 0x06, 0x06, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18,
+        0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86,
+        0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61,
+        0x18, 0x86, 0x61, 0x18, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42,
+        0x60, 0x82
+      ]);
+      trayIcon = nativeImage.createFromBuffer(iconData);
+    } else {
+      // Resize the icon for tray (16x16 or 32x32 depending on system)
+      trayIcon = trayIcon.resize({ width: 16, height: 16 });
+    }
+  } catch (error) {
+    console.error('Error loading tray icon:', error);
+    // Fallback to simple icon
+    const iconData = Buffer.from([
+      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0xF3, 0xFF,
+      0x61, 0x00, 0x00, 0x00, 0x4A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x64, 0x60, 0x60, 0x60,
+      0x64, 0x00, 0x01, 0x46, 0x06, 0x06, 0x06, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18,
+      0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86,
+      0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61,
+      0x18, 0x86, 0x61, 0x18, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42,
+      0x60, 0x82
+    ]);
+    trayIcon = nativeImage.createFromBuffer(iconData);
+  }
   tray = new Tray(trayIcon);
   
   const contextMenu = Menu.buildFromTemplate([
@@ -235,10 +279,17 @@ const createWindow = () => {
     if (!isQuitting) {
       event.preventDefault();
       hideToTray();
+    } else {
+      // When quitting, ensure proper cleanup
+      console.log('Window closing for app quit...');
+      if (!mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.destroy();
+      }
     }
   });
 
   mainWindow.on('closed', () => {
+    console.log('Window closed event');
     mainWindow = null;
   });
 };
@@ -258,8 +309,13 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  console.log('All windows closed');
   // Don't quit the app when all windows are closed, keep running in tray
   // The user can quit via the tray context menu
+  if (process.platform !== 'darwin' && isQuitting) {
+    console.log('Quitting app after all windows closed');
+    app.quit();
+  }
 });
 
 ipcMain.handle('get-screens', () => {
@@ -369,8 +425,24 @@ ipcMain.handle('show-from-tray', () => {
   return true;
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', (event) => {
+  console.log('App before-quit event triggered');
   isQuitting = true;
+  
+  // Force close all renderer processes to release database locks
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    console.log('Closing main window...');
+    mainWindow.removeAllListeners('closed');
+    mainWindow.webContents.closeDevTools();
+    
+    // Force close the renderer process
+    if (!mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.destroy();
+    }
+    
+    mainWindow.destroy();
+    mainWindow = null;
+  }
   
   // Unregister all global shortcuts
   globalShortcut.unregisterAll();
@@ -381,10 +453,51 @@ app.on('before-quit', () => {
     tray = null;
   }
   
+  console.log('Cleanup completed');
+});
+
+app.on('will-quit', (event) => {
+  console.log('App will-quit event triggered');
+  
+  // Ensure everything is cleaned up
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.removeAllListeners('closed');
-    mainWindow.close();
+    event.preventDefault();
+    mainWindow.destroy();
+    mainWindow = null;
+    setTimeout(() => {
+      app.quit();
+    }, 100);
   }
+});
+
+// Handle process termination signals
+const cleanup = () => {
+  console.log('Process cleanup initiated');
+  isQuitting = true;
+  
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    console.log('Force destroying window in cleanup');
+    if (!mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.destroy();
+    }
+    mainWindow.destroy();
+    mainWindow = null;
+  }
+  
+  globalShortcut.unregisterAll();
+  
+  if (tray) {
+    tray.destroy();
+    tray = null;
+  }
+};
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  cleanup();
+  process.exit(1);
 });
 
 if (process.env.NODE_ENV === 'development') {
