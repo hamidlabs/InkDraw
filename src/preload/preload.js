@@ -10,6 +10,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setAlwaysOnTop: (alwaysOnTop) => ipcRenderer.invoke('set-always-on-top', alwaysOnTop),
   
   getWindowInfo: () => ipcRenderer.invoke('get-window-info'),
+
+  // System tray functionality
+  hideToTray: () => ipcRenderer.invoke('hide-to-tray'),
+  
+  showFromTray: () => ipcRenderer.invoke('show-from-tray'),
+
+  // Shortcuts configuration
+  getShortcutsConfig: () => ipcRenderer.invoke('get-shortcuts-config'),
+  
+  updateShortcutsConfig: (config) => ipcRenderer.invoke('update-shortcuts-config', config),
   
   onWindowBlur: (callback) => {
     const handleBlur = () => callback();

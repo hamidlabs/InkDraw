@@ -1,9 +1,179 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, globalShortcut, nativeImage } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 let mainWindow = null;
 let currentScreen = null;
 let isAlwaysOnTop = true;
+let tray = null;
+let isQuitting = false;
+
+// Default shortcuts configuration
+const DEFAULT_SHORTCUTS = {
+  hideToTray: 'CommandOrControl+Shift+H',
+  showFromTray: 'CommandOrControl+Shift+S'
+};
+
+// Configuration file path
+const CONFIG_PATH = path.join(app.getPath('userData'), 'shortcuts-config.json');
+
+// Load shortcuts configuration
+const loadShortcutsConfig = () => {
+  try {
+    if (fs.existsSync(CONFIG_PATH)) {
+      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+      return { ...DEFAULT_SHORTCUTS, ...config };
+    }
+  } catch (error) {
+    console.error('Error loading shortcuts config:', error);
+  }
+  return DEFAULT_SHORTCUTS;
+};
+
+// Save shortcuts configuration
+const saveShortcutsConfig = (config) => {
+  try {
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error saving shortcuts config:', error);
+    return false;
+  }
+};
+
+let shortcutsConfig = loadShortcutsConfig();
+
+// Create system tray
+const createTray = () => {
+  // Create a simple icon for the tray (16x16 transparent PNG with a small dot)
+  const iconData = Buffer.from([
+    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+    0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0xF3, 0xFF,
+    0x61, 0x00, 0x00, 0x00, 0x4A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x64, 0x60, 0x60, 0x60,
+    0x64, 0x00, 0x01, 0x46, 0x06, 0x06, 0x06, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18,
+    0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86,
+    0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61, 0x18, 0x86, 0x61,
+    0x18, 0x86, 0x61, 0x18, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42,
+    0x60, 0x82
+  ]);
+  
+  const trayIcon = nativeImage.createFromBuffer(iconData);
+  tray = new Tray(trayIcon);
+  
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show InkDraw',
+      click: showFromTray
+    },
+    {
+      label: 'Hide to Tray',
+      click: hideToTray
+    },
+    { type: 'separator' },
+    {
+      label: 'Shortcuts Configuration',
+      submenu: [
+        {
+          label: `Hide to Tray: ${shortcutsConfig.hideToTray}`,
+          enabled: false
+        },
+        {
+          label: `Show from Tray: ${shortcutsConfig.showFromTray}`,
+          enabled: false
+        },
+        { type: 'separator' },
+        {
+          label: 'Reset to Defaults',
+          click: resetShortcutsToDefaults
+        }
+      ]
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+  
+  tray.setToolTip('InkDraw - Drawing & Annotation Tool');
+  tray.setContextMenu(contextMenu);
+  
+  // Double-click tray icon to show/hide window
+  tray.on('double-click', () => {
+    if (mainWindow && mainWindow.isVisible()) {
+      hideToTray();
+    } else {
+      showFromTray();
+    }
+  });
+};
+
+// Hide window to system tray
+const hideToTray = () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.hide();
+    
+    // On macOS, we might want to show a notification
+    if (process.platform === 'darwin') {
+      app.dock.hide();
+    }
+  }
+};
+
+// Show window from system tray
+const showFromTray = () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+    
+    // On macOS, show the dock icon
+    if (process.platform === 'darwin') {
+      app.dock.show();
+    }
+  } else if (!mainWindow) {
+    createWindow();
+  }
+};
+
+// Register global shortcuts
+const registerGlobalShortcuts = () => {
+  // Unregister existing shortcuts
+  globalShortcut.unregisterAll();
+  
+  // Register hide to tray shortcut
+  if (shortcutsConfig.hideToTray) {
+    try {
+      globalShortcut.register(shortcutsConfig.hideToTray, hideToTray);
+    } catch (error) {
+      console.error('Failed to register hideToTray shortcut:', error);
+    }
+  }
+  
+  // Register show from tray shortcut
+  if (shortcutsConfig.showFromTray) {
+    try {
+      globalShortcut.register(shortcutsConfig.showFromTray, showFromTray);
+    } catch (error) {
+      console.error('Failed to register showFromTray shortcut:', error);
+    }
+  }
+};
+
+// Reset shortcuts to defaults
+const resetShortcutsToDefaults = () => {
+  shortcutsConfig = { ...DEFAULT_SHORTCUTS };
+  saveShortcutsConfig(shortcutsConfig);
+  registerGlobalShortcuts();
+  
+  // Recreate tray to update menu
+  if (tray) {
+    tray.destroy();
+    createTray();
+  }
+};
 
 const createWindow = () => {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -60,6 +230,14 @@ const createWindow = () => {
     }
   });
 
+  // Modify close behavior to hide to tray instead of quitting
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      hideToTray();
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -67,18 +245,21 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow();
+  createTray();
+  registerGlobalShortcuts();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
+    } else if (mainWindow) {
+      showFromTray();
     }
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // Don't quit the app when all windows are closed, keep running in tray
+  // The user can quit via the tray context menu
 });
 
 ipcMain.handle('get-screens', () => {
@@ -141,7 +322,65 @@ ipcMain.handle('get-window-info', () => {
   };
 });
 
+// Handle shortcut configuration
+ipcMain.handle('get-shortcuts-config', () => {
+  return shortcutsConfig;
+});
+
+ipcMain.handle('update-shortcuts-config', (event, newConfig) => {
+  try {
+    // Validate shortcut format
+    const validatedConfig = {};
+    for (const [key, value] of Object.entries(newConfig)) {
+      if (typeof value === 'string' && value.trim()) {
+        validatedConfig[key] = value.trim();
+      }
+    }
+    
+    shortcutsConfig = { ...shortcutsConfig, ...validatedConfig };
+    const saved = saveShortcutsConfig(shortcutsConfig);
+    
+    if (saved) {
+      registerGlobalShortcuts();
+      
+      // Update tray menu
+      if (tray) {
+        tray.destroy();
+        createTray();
+      }
+      
+      return { success: true, config: shortcutsConfig };
+    }
+    
+    return { success: false, error: 'Failed to save configuration' };
+  } catch (error) {
+    console.error('Error updating shortcuts config:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('hide-to-tray', () => {
+  hideToTray();
+  return true;
+});
+
+ipcMain.handle('show-from-tray', () => {
+  showFromTray();
+  return true;
+});
+
 app.on('before-quit', () => {
+  isQuitting = true;
+  
+  // Unregister all global shortcuts
+  globalShortcut.unregisterAll();
+  
+  // Destroy tray
+  if (tray) {
+    tray.destroy();
+    tray = null;
+  }
+  
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.removeAllListeners('closed');
     mainWindow.close();

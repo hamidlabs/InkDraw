@@ -53,6 +53,11 @@ html {
 	display: none !important;
 }
 
+.tlui-button__tool:nth-last-of-type(1) {
+	margin-right: 0;
+	rotate: 180deg;
+}
+
 .toolbar-select {
 	background: var(--color-panel);
 	border: 1px solid var(--color-border);
@@ -74,6 +79,7 @@ html {
 	border-color: var(--color-selected);
 }
 
+.toolbar-hide-tray-btn,
 .toolbar-minimize-btn {
 	background: var(--color-panel);
 	border: 1px solid var(--color-border);
@@ -91,12 +97,18 @@ html {
 	transition: all 0.1s ease;
 }
 
+.toolbar-hide-tray-btn:hover,
 .toolbar-minimize-btn:hover {
 	background: var(--color-muted-1);
 }
 
+.toolbar-hide-tray-btn:active,
 .toolbar-minimize-btn:active {
 	background: var(--color-muted-2);
+}
+
+.toolbar-hide-tray-btn {
+	font-size: 14px;
 }
 
 /* Hide specific tldraw UI elements using CSS classes */

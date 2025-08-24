@@ -11,6 +11,10 @@ declare global {
       minimizeWindow: () => Promise<boolean>;
       setAlwaysOnTop: (alwaysOnTop: boolean) => Promise<boolean>;
       getWindowInfo: () => Promise<any>;
+      hideToTray: () => Promise<boolean>;
+      showFromTray: () => Promise<boolean>;
+      getShortcutsConfig: () => Promise<any>;
+      updateShortcutsConfig: (config: any) => Promise<any>;
       onWindowBlur: (callback: () => void) => () => void;
       onWindowFocus: (callback: () => void) => () => void;
       onKeyDown: (callback: (event: KeyboardEvent) => void) => () => void;
@@ -29,8 +33,8 @@ interface Screen {
 }
 
 
-// Integrated toolbar with tldraw native controls + monitor selection + minimize
-const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimize, ...props }: any) => {
+// Integrated toolbar with tldraw native controls + monitor selection + minimize + system tray
+const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimize, onHideToTray, ...props }: any) => {
   return (
     <DefaultToolbar {...props}>
       <DefaultToolbarContent />
@@ -55,6 +59,15 @@ const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimiz
         </div>
       )}
       
+      {/* Hide to tray button */}
+      <button 
+        className="toolbar-hide-tray-btn"
+        onClick={onHideToTray}
+        title="Hide to System Tray"
+      >
+        <span>⬇</span>
+      </button>
+      
       {/* Minimize button */}
       <button 
         className="toolbar-minimize-btn"
@@ -67,34 +80,6 @@ const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimiz
   );
 };
 
-// Custom Background component for transparent support
-const CustomBackground = ({ background }: { background: string }) => {
-  if (background === 'transparent') {
-    return (
-      <div 
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundColor: 'transparent',
-          pointerEvents: 'none',
-          zIndex: -1
-        }}
-      />
-    );
-  }
-  return (
-    <div 
-      style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundColor: background === 'white' ? '#ffffff' : 
-                        background === 'light' ? '#f8f9fa' : 
-                        background === 'dark' ? '#2c3e50' : 'transparent',
-        zIndex: -1
-      }}
-    />
-  );
-};
 
 // Custom StylePanel that only shows when we want it to
 const ControlledStylePanel = ({ position, ...props }: any) => {
@@ -128,12 +113,12 @@ const App: React.FC = () => {
         currentScreenId={currentScreenId}
         onScreenSwitch={handleScreenSwitch}
         onMinimize={handleMinimize}
+        onHideToTray={handleHideToTray}
       />
     ),
     StylePanel: showStylePanel ? (props: any) => (
       <ControlledStylePanel {...props} position={stylePanelPosition} />
     ) : null,
-    Background: () => <CustomBackground background={background} />,
     ContextMenu: null, // Hide context menu to prevent default right-click behavior
     // Hide specific UI elements as requested
     NavigationPanel: null, // Hides page zoom button  
@@ -196,6 +181,14 @@ const App: React.FC = () => {
       await window.electronAPI.minimizeWindow();
     } catch (error) {
       console.error('Failed to minimize window:', error);
+    }
+  }, []);
+
+  const handleHideToTray = useCallback(async () => {
+    try {
+      await window.electronAPI.hideToTray();
+    } catch (error) {
+      console.error('Failed to hide to tray:', error);
     }
   }, []);
 
