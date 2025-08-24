@@ -236,19 +236,27 @@ const IntegratedToolbar = ({ screens, currentScreenId, onScreenSwitch, onMinimiz
 
 
 // Custom StylePanel that only shows when we want it to
-const ControlledStylePanel = ({ position, ...props }: any) => {
+const ControlledStylePanel = React.forwardRef<HTMLDivElement, any>(({ position, ...props }, ref) => {
+  const handlePanelClick = (event: React.MouseEvent) => {
+    // Prevent clicks inside the panel from bubbling up
+    event.stopPropagation();
+  };
+
   return (
     <div 
+      ref={ref}
       className="controlled-style-panel"
       style={{
         left: position?.x || 0,
         top: position?.y || 0,
       }}
+      onClick={handlePanelClick}
+      onMouseDown={handlePanelClick}
     >
       <DefaultStylePanel {...props} />
     </div>
   );
-};
+});
 
 const App: React.FC = () => {
   const [screens, setScreens] = useState<Screen[]>([]);
@@ -259,6 +267,7 @@ const App: React.FC = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [shortcutsConfig, setShortcutsConfig] = useState<ShortcutsConfig>({ hideToTray: '', showFromTray: '' });
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const stylePanelRef = useRef<HTMLDivElement>(null);
 
   // Components configuration with integrated toolbar
   const components: TLUiComponents = {
@@ -275,7 +284,7 @@ const App: React.FC = () => {
       />
     ),
     StylePanel: showStylePanel ? (props: any) => (
-      <ControlledStylePanel {...props} position={stylePanelPosition} />
+      <ControlledStylePanel {...props} position={stylePanelPosition} ref={stylePanelRef} />
     ) : null,
     ContextMenu: null, // Hide context menu to prevent default right-click behavior
     // Hide specific UI elements as requested
@@ -398,15 +407,40 @@ const App: React.FC = () => {
 
   // Handle click outside to hide style panel
   useEffect(() => {
-    const handleClickOutside = () => {
-      if (showStylePanel) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showStylePanel && stylePanelRef.current) {
+        const target = event.target as HTMLElement;
+        
+        // Check if the click is inside the style panel
+        if (stylePanelRef.current.contains(target)) {
+          return;
+        }
+        
+        // Check if the click is on a tldraw dropdown or select element
+        // These are often rendered outside the panel as portals
+        const isDropdownElement = target.closest('.tlui-popover') || 
+                                 target.closest('.tlui-popover__content') ||
+                                 target.closest('.tlui-select') ||
+                                 target.closest('.tlui-select__content') ||
+                                 target.closest('.tlui-dropdown') ||
+                                 target.closest('.tlui-dropdown__content') ||
+                                 target.closest('[data-radix-popper-content-wrapper]') ||
+                                 target.closest('[role="listbox"]') ||
+                                 target.closest('[role="option"]');
+        
+        if (isDropdownElement) {
+          return;
+        }
+        
+        // If we get here, it's a click outside the panel and not on a dropdown
         setShowStylePanel(false);
       }
     };
 
     if (showStylePanel) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      // Use mousedown with capture to ensure we get the event before other handlers
+      document.addEventListener('mousedown', handleClickOutside, true);
+      return () => document.removeEventListener('mousedown', handleClickOutside, true);
     }
   }, [showStylePanel]);
 
