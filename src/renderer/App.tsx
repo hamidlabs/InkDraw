@@ -445,9 +445,41 @@ const App: React.FC = () => {
 
 		const rect = canvasContainerRef.current?.getBoundingClientRect()
 		if (rect) {
+			// Calculate initial position relative to canvas
+			const initialX = event.clientX - rect.left
+			const initialY = event.clientY - rect.top
+
+			// Estimate menu dimensions (typical style panel size)
+			const menuWidth = 240
+			const menuHeight = 300
+
+			// Calculate viewport boundaries
+			const viewportWidth = rect.width
+			const viewportHeight = rect.height
+
+			// Smart positioning logic
+			let finalX = initialX
+			let finalY = initialY
+
+			// Check horizontal bounds
+			if (initialX + menuWidth > viewportWidth) {
+				// Not enough space on right, position to the left of cursor
+				finalX = Math.max(0, initialX - menuWidth)
+			}
+
+			// Check vertical bounds
+			if (initialY + menuHeight > viewportHeight) {
+				// Not enough space below, position above cursor
+				finalY = Math.max(0, initialY - menuHeight)
+			}
+
+			// Ensure menu doesn't go outside viewport
+			finalX = Math.max(0, Math.min(finalX, viewportWidth - menuWidth))
+			finalY = Math.max(0, Math.min(finalY, viewportHeight - menuHeight))
+
 			setStylePanelPosition({
-				x: event.clientX - rect.left,
-				y: event.clientY - rect.top,
+				x: finalX,
+				y: finalY,
 			})
 			setShowStylePanel(true)
 		}
