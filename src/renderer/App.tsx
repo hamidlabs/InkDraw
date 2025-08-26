@@ -5,6 +5,7 @@ import {
 	DefaultToolbarContent,
 	Tldraw,
 	TLUiComponents,
+	useEditor,
 } from 'tldraw'
 import 'tldraw/tldraw.css'
 import './App.css'
@@ -215,6 +216,29 @@ interface Screen {
 	isPrimary: boolean
 }
 
+// Theme toggle button component that uses tldraw's editor API
+const ThemeToggleButton = () => {
+	const editor = useEditor()
+
+	const handleClick = useCallback(() => {
+		const isDark = editor.user.getIsDarkMode()
+		editor.user.updateUserPreferences({ colorScheme: isDark ? 'light' : 'dark' })
+	}, [editor])
+
+	const isDark = editor.user.getIsDarkMode()
+
+	return (
+		<button
+			className="toolbar-theme-btn"
+			onClick={handleClick}
+			title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+			style={{ pointerEvents: 'all' }}
+		>
+			<span>{isDark ? "☀️" : "🌙"}</span>
+		</button>
+	)
+}
+
 // Integrated toolbar with tldraw native controls + monitor selection + minimize + system tray + settings + close
 const IntegratedToolbar = ({
 	screens,
@@ -249,6 +273,9 @@ const IntegratedToolbar = ({
 					</div>
 				</>
 			)}
+
+			{/* Dark/Light mode toggle */}
+			<ThemeToggleButton />
 
 			{/* Settings button */}
 			<button
@@ -317,10 +344,6 @@ const App: React.FC = () => {
 	const [stylePanelPosition, setStylePanelPosition] = useState({ x: 0, y: 0 })
 	const [background, setBackground] = useState('transparent')
 	const [showSettingsModal, setShowSettingsModal] = useState(false)
-	const [shortcutsConfig, setShortcutsConfig] = useState<ShortcutsConfig>({
-		hideToTray: '',
-		showFromTray: '',
-	})
 	const canvasContainerRef = useRef<HTMLDivElement>(null)
 	const stylePanelRef = useRef<HTMLDivElement>(null)
 
@@ -419,8 +442,8 @@ const App: React.FC = () => {
 		}
 	}, [])
 
-	const handleShortcutsSave = useCallback((newConfig: ShortcutsConfig) => {
-		setShortcutsConfig(newConfig)
+	const handleShortcutsSave = useCallback((_newConfig: ShortcutsConfig) => {
+		// Configuration saved via electron API
 	}, [])
 
 	const handleClose = useCallback(async () => {
@@ -430,6 +453,7 @@ const App: React.FC = () => {
 			console.error('Failed to quit app:', error)
 		}
 	}, [])
+
 
 	const toggleBackground = useCallback(() => {
 		const backgrounds = ['transparent', 'white', 'dark', 'teal']
@@ -586,7 +610,8 @@ const App: React.FC = () => {
 	}
 
 	const getThemeClass = () => {
-		// Use dark theme for dark backgrounds, light theme for light backgrounds
+		// tldraw will handle theme automatically via user preferences
+		// Fallback: Use dark theme for dark backgrounds when theme isn't set
 		const darkBackgrounds = ['dark', 'teal']
 		return darkBackgrounds.includes(background)
 			? 'tl-theme__dark'
