@@ -449,9 +449,16 @@ const App: React.FC = () => {
 			const initialX = event.clientX - rect.left
 			const initialY = event.clientY - rect.top
 
-			// Estimate menu dimensions (typical style panel size)
+			// Estimate menu dimensions dynamically
 			const menuWidth = 240
-			const menuHeight = 300
+			// Base height for color picker, brush tools, etc.
+			let menuHeight = 300
+			
+			// Check if any shapes might be selected by examining the click target
+			// We'll add extra height for potential shape properties
+			// This accounts for the "Shape" section that appears when shapes are selected
+			const additionalHeightForShapeProps = 120
+			menuHeight += additionalHeightForShapeProps
 
 			// Calculate viewport boundaries
 			const viewportWidth = rect.width
