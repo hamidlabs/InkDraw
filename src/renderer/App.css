@@ -50,6 +50,7 @@ html {
 
 .tlui-toolbar__tools {
 	border-radius: 0 0 10px 10px !important;
+	padding-right: 40px !important;
 }
 
 .tlui-toolbar__extras {
@@ -151,8 +152,8 @@ html {
 	display: flex !important;
 	justify-content: center !important;
 	position: fixed !important;
-	top: 40px !important;
-	left: 50% !important;
+	top: 3px !important;
+	left: 64% !important;
 	border-radius: 0 0 10px 10px !important;
 	transform: translateX(-29%) !important;
 	background-color: var(--color-panel) !important;
