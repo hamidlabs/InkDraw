@@ -216,28 +216,6 @@ interface Screen {
 	isPrimary: boolean
 }
 
-// Theme toggle button component that uses tldraw's editor API
-const ThemeToggleButton = () => {
-	const editor = useEditor()
-
-	const handleClick = useCallback(() => {
-		const isDark = editor.user.getIsDarkMode()
-		editor.user.updateUserPreferences({ colorScheme: isDark ? 'light' : 'dark' })
-	}, [editor])
-
-	const isDark = editor.user.getIsDarkMode()
-
-	return (
-		<button
-			className="toolbar-theme-btn"
-			onClick={handleClick}
-			title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-			style={{ pointerEvents: 'all' }}
-		>
-			<span>{isDark ? "☀️" : "🌙"}</span>
-		</button>
-	)
-}
 
 // Integrated toolbar with tldraw native controls + monitor selection + minimize + system tray + settings + close
 const IntegratedToolbar = ({
@@ -274,8 +252,6 @@ const IntegratedToolbar = ({
 				</>
 			)}
 
-			{/* Dark/Light mode toggle */}
-			<ThemeToggleButton />
 
 			{/* Settings button */}
 			<button

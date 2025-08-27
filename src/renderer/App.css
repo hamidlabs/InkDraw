@@ -83,7 +83,6 @@ html {
 	border-color: var(--color-selected);
 }
 
-.toolbar-theme-btn,
 .toolbar-settings-btn,
 .toolbar-hide-tray-btn,
 .toolbar-minimize-btn,
@@ -104,7 +103,6 @@ html {
 	transition: all 0.1s ease;
 }
 
-.toolbar-theme-btn:hover,
 .toolbar-settings-btn:hover,
 .toolbar-hide-tray-btn:hover,
 .toolbar-minimize-btn:hover,
@@ -112,7 +110,6 @@ html {
 	background: var(--color-muted-1);
 }
 
-.toolbar-theme-btn:active,
 .toolbar-settings-btn:active,
 .toolbar-hide-tray-btn:active,
 .toolbar-minimize-btn:active,
@@ -120,18 +117,6 @@ html {
 	background: var(--color-muted-2);
 }
 
-.toolbar-theme-btn {
-	font-size: 14px;
-}
-
-.toolbar-theme-btn span {
-	filter: grayscale(0);
-	transition: filter 0.2s ease;
-}
-
-.toolbar-theme-btn:hover span {
-	filter: brightness(1.2);
-}
 
 .toolbar-hide-tray-btn {
 	font-size: 14px;
