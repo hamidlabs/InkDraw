@@ -147,8 +147,31 @@ html {
 	display: none !important;
 }
 
-.tlui-layout__top__left {
+.tlui-menu-zone {
+	display: flex !important;
+	justify-content: center !important;
+	position: fixed !important;
+	top: 40px !important;
+	left: 50% !important;
+	border-radius: 0 0 10px 10px !important;
+	transform: translateX(-29%) !important;
+	background-color: var(--color-panel) !important;
+}
+
+/* hide help button */
+.tlui-menu button[data-testid='main-menu-sub.help-button'] {
 	display: none !important;
+}
+
+/* hide all menu button accept main menu */
+/* Hide ALL buttons in toolbar */
+.tlui-buttons__horizontal button {
+	display: none !important;
+}
+
+/* Keep ONLY the main menu button */
+.tlui-buttons__horizontal button[data-testid='main-menu.button'] {
+	display: inline-flex !important;
 }
 
 /* Controlled style panel positioning */

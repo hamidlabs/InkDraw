@@ -373,7 +373,6 @@ const App: React.FC = () => {
 		ContextMenu: null, // Hide context menu to prevent default right-click behavior
 		// Hide specific UI elements as requested
 		NavigationPanel: null, // Hides page zoom button
-		MainMenu: null,
 		HelpMenu: null,
 		ActionsMenu: null,
 	}
