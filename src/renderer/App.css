@@ -137,9 +137,10 @@ html {
 	justify-content: center !important;
 	position: fixed !important;
 	top: 3px !important;
-	left: 63.5% !important;
+	left: 50% !important;
 	border-radius: 0 0 10px 10px !important;
-	transform: translateX(-29%) !important;
+	transform: translateX(-50%) !important;
+	margin-left: 212px !important;
 	background-color: transparent !important;
 	border: none !important;
 }
