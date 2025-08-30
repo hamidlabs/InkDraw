@@ -5,7 +5,6 @@ import {
 	DefaultToolbarContent,
 	Tldraw,
 	TLUiComponents,
-	useEditor,
 } from 'tldraw'
 import 'tldraw/tldraw.css'
 import './App.css'
@@ -216,7 +215,6 @@ interface Screen {
 	isPrimary: boolean
 }
 
-
 // Integrated toolbar with tldraw native controls + monitor selection + minimize + system tray + settings + close
 const IntegratedToolbar = ({
 	screens,
@@ -235,7 +233,6 @@ const IntegratedToolbar = ({
 			{/* Monitor selection control with conditional divider */}
 			{screens && screens.length > 1 && (
 				<>
-					<div className="tlui-toolbar__divider" />
 					<div className="toolbar-monitor-selector">
 						<select
 							value={currentScreenId || ''}
@@ -251,7 +248,6 @@ const IntegratedToolbar = ({
 					</div>
 				</>
 			)}
-
 
 			{/* Settings button */}
 			<button
@@ -429,7 +425,6 @@ const App: React.FC = () => {
 		}
 	}, [])
 
-
 	const toggleBackground = useCallback(() => {
 		const backgrounds = ['transparent', 'white', 'dark', 'teal']
 		const currentIndex = backgrounds.indexOf(background)
@@ -452,7 +447,7 @@ const App: React.FC = () => {
 			const menuWidth = 240
 			// Base height for color picker, brush tools, etc.
 			let menuHeight = 300
-			
+
 			// Check if any shapes might be selected by examining the click target
 			// We'll add extra height for potential shape properties
 			// This accounts for the "Shape" section that appears when shapes are selected

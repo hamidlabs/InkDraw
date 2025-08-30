@@ -16,7 +16,17 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    strictPort: true
+    strictPort: true,
+    hmr: {
+      overlay: true
+    },
+    watch: {
+      usePolling: true,
+      interval: 100
+    }
+  },
+  css: {
+    devSourcemap: true
   },
   resolve: {
     alias: {
